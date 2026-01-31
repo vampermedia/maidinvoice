@@ -86,16 +86,11 @@
             padding-bottom: 8px;
         }
 
-        /* Print Specific Styles - OPTIMIZED FOR COMPACT HALF-PAGE */
+        /* Print Specific Styles - CLEAN LAYOUT (WYSIWYG) */
         @media print {
             @page {
                 margin: 0.5cm;
                 size: auto; 
-            }
-
-            /* Scale down the entire document proportionally using root font size */
-            html {
-                font-size: 12px; /* Scales all rem units (text-lg, text-xs) down proportionally */
             }
 
             body {
@@ -108,92 +103,43 @@
                 display: none !important;
             }
 
+            /* Main Container Fixes for Print */
+            /* Force the main grid to act as a block so the invoice takes full width */
+            .grid-cols-1.md\:grid-cols-3 {
+                display: block !important;
+            }
+            
+            .col-span-1, .col-span-2 {
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+
             .invoice-container {
                 box-shadow: none !important;
-                padding: 1rem !important; /* Tight padding */
+                border: none !important;
+                padding: 0 !important;
                 margin: 0 !important;
                 max-width: 100% !important;
-                border: 1px solid #ddd !important;
-                min-height: auto !important; /* Remove fixed height */
-                height: auto !important;
-                page-break-inside: avoid; /* PREVENTS SPLITTING */
+                width: 100% !important;
             }
 
-            /* Compact gaps for print */
-            .print-compact-gap {
-                gap: 0.5rem !important;
-                margin-bottom: 0.5rem !important;
-            }
-            
-            .print-compact-mb {
-                margin-bottom: 0.25rem !important;
-            }
-
-            .print-hidden-mt {
-                margin-top: 0 !important;
-                padding-top: 0 !important;
-            }
-
-            /* Scale down calendar significantly */
-            .calendar-day {
-                width: 20px !important;
-                height: 20px !important;
-                font-size: 0.7rem !important;
-                aspect-ratio: auto !important;
-                padding: 2px !important;
-            }
-            
-            .calendar-header {
-                font-size: 0.65rem !important;
-                padding-bottom: 2px !important;
-            }
-            
-            .calendar-section {
-                margin-bottom: 0.5rem !important;
-            }
-
-            /* Adjust headings layout but keep font hierarchy */
-            h2 { margin-bottom: 0 !important; }
-            h3 { margin-bottom: 2px !important; }
-            
-            /* Input styling for print */
+            /* Clean up Inputs */
             input, textarea, select {
                 border: none !important;
                 background: transparent !important;
-                resize: none;
+                box-shadow: none !important;
                 padding: 0 !important;
                 margin: 0 !important;
-                /* Removed 'font-size: inherit' to let Tailwind text-classes work */
-                height: auto !important;
-                line-height: 1.2 !important;
+                resize: none;
+                /* Ensure placeholders don't print */
             }
-
-            /* Hide placeholders in print */
             input::placeholder, textarea::placeholder {
                 color: transparent;
             }
-            
-            /* Save ink on icon */
-            .icon-box {
-                background: none !important;
-                color: var(--primary) !important; 
-                width: auto !important;
-                height: auto !important;
-                box-shadow: none !important;
-            }
-            .icon-box i {
-                font-size: 1.5rem !important;
-            }
-            
-            /* Compact footer */
-            .footer-box {
-                background-color: transparent !important;
-                padding: 0.5rem !important;
-                border-top: 1px solid #eee;
-            }
-            .footer-message {
-                margin-top: 0.5rem !important;
-                padding-top: 0.5rem !important;
+
+            /* Ensure text legibility */
+            .text-gray-400, .text-gray-500 {
+                color: #4b5563 !important; /* Slightly darker gray for better print contrast */
             }
         }
     </style>
@@ -307,7 +253,7 @@
                 
                 <!-- Invoice Header -->
                 <div>
-                    <div class="flex justify-between items-start mb-8 print-compact-mb">
+                    <div class="flex justify-between items-start mb-8">
                         <div>
                             <h2 class="text-3xl font-bold text-gray-800 tracking-tight">INVOICE</h2>
                             <div class="mt-2 text-gray-500 text-sm">
@@ -326,7 +272,7 @@
                     </div>
 
                     <!-- From / To -->
-                    <div class="grid grid-cols-2 gap-8 mb-8 print-compact-gap">
+                    <div class="grid grid-cols-2 gap-8 mb-8">
                         <div>
                             <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">From (Housekeeper)</h3>
                             <input type="text" placeholder="Housekeeper Name" class="block w-full text-lg font-semibold text-gray-800 theme-focus border-b border-transparent hover:border-gray-300 transition mb-1" value="Maria Santos">
@@ -339,11 +285,11 @@
                         </div>
                     </div>
 
-                    <hr class="border-gray-100 mb-8 print-compact-mb">
+                    <hr class="border-gray-100 mb-8">
 
                     <!-- Calendar Visual -->
                     <div class="mb-8 calendar-section">
-                        <h3 class="text-sm font-bold text-gray-700 mb-4 flex justify-between items-center print-compact-mb">
+                        <h3 class="text-sm font-bold text-gray-700 mb-4 flex justify-between items-center">
                             <span>Service Record: <span id="displayMonthYear" class="theme-text">October 2023</span></span>
                             <span class="text-xs font-normal text-gray-400 no-print">(Click dates below to mark work)</span>
                         </h3>
@@ -374,7 +320,7 @@
                             <span class="text-gray-600 text-sm">Total Days Worked</span>
                             <span id="totalDaysDisplay" class="font-semibold text-gray-800">0 days</span>
                         </div>
-                        <div class="flex justify-between items-center mb-2 print-compact-mb">
+                        <div class="flex justify-between items-center mb-2">
                             <span class="text-gray-600 text-sm">Daily Rate</span>
                             <span id="rateDisplay" class="font-semibold text-gray-800">₱ 435.00</span>
                         </div>
@@ -387,7 +333,7 @@
                             <!-- Injected by JS -->
                         </div>
 
-                        <div class="border-t border-gray-200 pt-4 flex justify-between items-center print-hidden-mt">
+                        <div class="border-t border-gray-200 pt-4 flex justify-between items-center">
                             <span class="text-lg font-bold text-gray-800">Total Due</span>
                             <span id="totalAmountDisplay" class="text-2xl font-bold theme-text">₱ 0.00</span>
                         </div>
@@ -579,7 +525,7 @@
                 const sign = isNegative ? '-' : '+';
                 
                 const div = document.createElement('div');
-                div.className = `flex justify-between items-center mb-2 ${colorClass} print-compact-mb`;
+                div.className = `flex justify-between items-center mb-2 ${colorClass}`;
                 div.innerHTML = `
                     <span class="text-sm flex items-center">
                         <i class="fa-solid ${isNegative ? 'fa-minus-circle' : 'fa-plus-circle'} mr-2 text-xs opacity-70"></i>
