@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Housekeeper Invoice Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+
+        /* Calendar Styles */
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+        }
+        
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            border-radius: 9999px; /* Circle */
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .calendar-day:hover:not(.empty) {
+            background-color: #e5e7eb;
+        }
+
+        .calendar-day.selected {
+            background-color: #3b82f6 !important; /* Blue-500 */
+            color: white !important;
+            font-weight: 600;
+        }
+
+        .calendar-day.empty {
+            cursor: default;
+        }
+
+        .calendar-header {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-align: center;
+            color: #6b7280;
+            padding-bottom: 8px;
+        }
+
+        /* Print Specific Styles */
+        @media print {
+            body {
+                background-color: white;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            
+            .no-print {
+                display: none !important;
+            }
+
+            .invoice-container {
+                box-shadow: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                max-width: 100% !important;
+                border: none !important;
+            }
+
+            /* Ensure selected dates print with background color */
+            .calendar-day.selected {
+                background-color: #3b82f6 !important;
+                color: white !important;
+                -webkit-print-color-adjust: exact;
+            }
+
+            input, textarea, select {
+                border: none !important;
+                background: transparent !important;
+                resize: none;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+
+            /* Hide placeholders in print */
+            input::placeholder, textarea::placeholder {
+                color: transparent;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-8">
+
+    <!-- Navbar / Controls (Hidden on Print) -->
+    <div class="no-print max-w-4xl mx-auto mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800"><i class="fa-solid fa-file-invoice-dollar mr-2"></i>Invoice Generator</h1>
+            <p class="text-gray-500 text-sm">Generate invoices for housekeeping services</p>
+        </div>
+        <div class="flex gap-3">
+            <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg shadow transition flex items-center gap-2">
+                <i class="fa-solid fa-print"></i> Print / Save PDF
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Layout -->
+    <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
+
+        <!-- Sidebar Settings (Hidden on Print) -->
+        <div class="no-print col-span-1 space-y-4">
+            
+            <!-- Period Selector -->
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
+                <h3 class="font-semibold text-gray-700 mb-3 text-sm uppercase tracking-wide">Billing Period</h3>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">Month</label>
+                        <select id="monthSelect" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5">
+                            <option value="0">January</option>
+                            <option value="1">February</option>
+                            <option value="2">March</option>
+                            <option value="3">April</option>
+                            <option value="4">May</option>
+                            <option value="5">June</option>
+                            <option value="6">July</option>
+                            <option value="7">August</option>
+                            <option value="8">September</option>
+                            <option value="9">October</option>
+                            <option value="10">November</option>
+                            <option value="11">December</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">Year</label>
+                        <input type="number" id="yearInput" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5" value="2023">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rate Settings -->
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
+                <h3 class="font-semibold text-gray-700 mb-3 text-sm uppercase tracking-wide">Compensation</h3>
+                <div>
+                    <label class="block text-xs text-gray-500 mb-1">Daily Rate (PHP)</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <span class="text-gray-500">₱</span>
+                        </div>
+                        <input type="number" id="rateInput" class="pl-7 w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5" placeholder="0.00" value="435">
+                    </div>
+                    <p class="text-xs text-gray-400 mt-2">Adjust this rate to change the invoice total.</p>
+                </div>
+            </div>
+
+            <!-- Instructions -->
+            <div class="bg-blue-50 p-5 rounded-xl border border-blue-100">
+                <h3 class="font-semibold text-blue-800 mb-2 text-sm"><i class="fa-solid fa-circle-info mr-1"></i> How to use</h3>
+                <ul class="text-xs text-blue-700 space-y-1 list-disc list-inside">
+                    <li>Select the Month & Year.</li>
+                    <li>Update the Daily Rate.</li>
+                    <li>Click days on the <strong>Calendar</strong> (right) to mark work days.</li>
+                    <li>Fill in names and details directly on the Invoice.</li>
+                    <li>Click Print when ready.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Invoice Preview (The Printable Area) -->
+        <div class="col-span-1 md:col-span-2">
+            <div class="invoice-container bg-white p-8 md:p-10 rounded-xl shadow-lg border border-gray-200 min-h-[800px] flex flex-col justify-between relative">
+                
+                <!-- Invoice Header -->
+                <div>
+                    <div class="flex justify-between items-start mb-8">
+                        <div>
+                            <h2 class="text-3xl font-bold text-gray-800 tracking-tight">INVOICE</h2>
+                            <div class="mt-2 text-gray-500 text-sm">
+                                Invoice #: <input type="text" value="INV-2023-001" class="font-medium text-gray-700 focus:outline-none focus:border-b border-blue-300 w-32 hover:bg-gray-50 p-1 rounded">
+                            </div>
+                            <div class="text-gray-500 text-sm">
+                                Date: <input type="date" id="invoiceDate" class="font-medium text-gray-700 focus:outline-none focus:border-b border-blue-300 hover:bg-gray-50 p-1 rounded">
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="w-16 h-16 bg-blue-600 rounded-lg flex items-center justify-center text-white text-2xl mb-2 ml-auto shadow-sm">
+                                <i class="fa-solid fa-broom"></i>
+                            </div>
+                            <input type="text" placeholder="Your Service Name" value="Housekeeping Services" class="text-right font-bold text-lg text-gray-800 focus:outline-none focus:border-b border-blue-300 w-full hover:bg-gray-50 rounded">
+                        </div>
+                    </div>
+
+                    <!-- From / To -->
+                    <div class="grid grid-cols-2 gap-8 mb-8">
+                        <div>
+                            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">From (Housekeeper)</h3>
+                            <input type="text" placeholder="Housekeeper Name" class="block w-full text-lg font-semibold text-gray-800 focus:outline-none border-b border-transparent hover:border-gray-300 focus:border-blue-500 transition mb-1" value="Maria Santos">
+                            <input type="text" placeholder="Address / Contact Info" class="block w-full text-sm text-gray-500 focus:outline-none border-b border-transparent hover:border-gray-300 focus:border-blue-500 transition" value="0912-345-6789">
+                        </div>
+                        <div class="text-right">
+                            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">To (Homeowner)</h3>
+                            <input type="text" placeholder="Client Name" class="block w-full text-right text-lg font-semibold text-gray-800 focus:outline-none border-b border-transparent hover:border-gray-300 focus:border-blue-500 transition mb-1" value="Juan Dela Cruz">
+                            <input type="text" placeholder="Address" class="block w-full text-right text-sm text-gray-500 focus:outline-none border-b border-transparent hover:border-gray-300 focus:border-blue-500 transition" value="Davao City">
+                        </div>
+                    </div>
+
+                    <hr class="border-gray-100 mb-8">
+
+                    <!-- Calendar Visual -->
+                    <div class="mb-8">
+                        <h3 class="text-sm font-bold text-gray-700 mb-4 flex justify-between items-center">
+                            <span>Service Record: <span id="displayMonthYear" class="text-blue-600">October 2023</span></span>
+                            <span class="text-xs font-normal text-gray-400 no-print">(Click dates below to mark work)</span>
+                        </h3>
+                        
+                        <div class="bg-white border border-gray-200 rounded-xl p-4">
+                            <!-- Days of Week -->
+                            <div class="calendar-grid mb-2">
+                                <div class="calendar-header text-red-400">Sun</div>
+                                <div class="calendar-header">Mon</div>
+                                <div class="calendar-header">Tue</div>
+                                <div class="calendar-header">Wed</div>
+                                <div class="calendar-header">Thu</div>
+                                <div class="calendar-header">Fri</div>
+                                <div class="calendar-header">Sat</div>
+                            </div>
+                            <!-- Days Grid -->
+                            <div id="calendarDays" class="calendar-grid">
+                                <!-- JS will populate this -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer / Totals -->
+                <div>
+                    <div class="bg-gray-50 rounded-lg p-6">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-gray-600 text-sm">Total Days Worked</span>
+                            <span id="totalDaysDisplay" class="font-semibold text-gray-800">0 days</span>
+                        </div>
+                        <div class="flex justify-between items-center mb-4">
+                            <span class="text-gray-600 text-sm">Daily Rate</span>
+                            <span id="rateDisplay" class="font-semibold text-gray-800">₱ 435.00</span>
+                        </div>
+                        <div class="border-t border-gray-200 pt-4 flex justify-between items-center">
+                            <span class="text-lg font-bold text-gray-800">Total Due</span>
+                            <span id="totalAmountDisplay" class="text-2xl font-bold text-blue-600">₱ 0.00</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 pt-8 border-t border-gray-100 text-center">
+                        <p class="text-gray-400 text-xs italic">Thank you for your business!</p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // State
+        const state = {
+            selectedDates: new Set(),
+            currentMonth: new Date().getMonth(),
+            currentYear: new Date().getFullYear(),
+            dailyRate: 435
+        };
+
+        // DOM Elements
+        const calendarGrid = document.getElementById('calendarDays');
+        const monthSelect = document.getElementById('monthSelect');
+        const yearInput = document.getElementById('yearInput');
+        const rateInput = document.getElementById('rateInput');
+        
+        const displayMonthYear = document.getElementById('displayMonthYear');
+        const totalDaysDisplay = document.getElementById('totalDaysDisplay');
+        const rateDisplay = document.getElementById('rateDisplay');
+        const totalAmountDisplay = document.getElementById('totalAmountDisplay');
+        const invoiceDateInput = document.getElementById('invoiceDate');
+
+        // Initialization
+        function init() {
+            // Set initial inputs
+            monthSelect.value = state.currentMonth;
+            yearInput.value = state.currentYear;
+            rateInput.value = state.dailyRate;
+            invoiceDateInput.valueAsDate = new Date();
+
+            // Event Listeners
+            monthSelect.addEventListener('change', (e) => {
+                state.currentMonth = parseInt(e.target.value);
+                state.selectedDates.clear(); // Clear selection on month change
+                renderCalendar();
+                calculateTotals();
+            });
+
+            yearInput.addEventListener('change', (e) => {
+                state.currentYear = parseInt(e.target.value);
+                state.selectedDates.clear();
+                renderCalendar();
+                calculateTotals();
+            });
+
+            rateInput.addEventListener('input', (e) => {
+                state.dailyRate = parseFloat(e.target.value) || 0;
+                calculateTotals();
+            });
+
+            // Initial Render
+            renderCalendar();
+            calculateTotals();
+        }
+
+        // Logic to toggle date selection
+        function toggleDate(day) {
+            if (state.selectedDates.has(day)) {
+                state.selectedDates.delete(day);
+            } else {
+                state.selectedDates.add(day);
+            }
+            renderCalendar();
+            calculateTotals();
+        }
+
+        // Calculation Logic
+        function calculateTotals() {
+            const daysCount = state.selectedDates.size;
+            const total = daysCount * state.dailyRate;
+
+            // Update UI
+            totalDaysDisplay.textContent = `${daysCount} day${daysCount !== 1 ? 's' : ''}`;
+            rateDisplay.textContent = `₱ ${state.dailyRate.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            totalAmountDisplay.textContent = `₱ ${total.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        }
+
+        // Calendar Render Logic
+        function renderCalendar() {
+            calendarGrid.innerHTML = '';
+            
+            const firstDay = new Date(state.currentYear, state.currentMonth, 1).getDay();
+            const daysInMonth = new Date(state.currentYear, state.currentMonth + 1, 0).getDate();
+            
+            // Update Header Text
+            const monthName = monthSelect.options[monthSelect.selectedIndex].text;
+            displayMonthYear.textContent = `${monthName} ${state.currentYear}`;
+
+            // Add empty slots for days before start of month
+            for (let i = 0; i < firstDay; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.className = 'calendar-day empty';
+                calendarGrid.appendChild(emptyCell);
+            }
+
+            // Add days
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayCell = document.createElement('div');
+                dayCell.textContent = day;
+                dayCell.className = 'calendar-day';
+                
+                // Check if selected
+                if (state.selectedDates.has(day)) {
+                    dayCell.classList.add('selected');
+                }
+
+                // Interaction
+                dayCell.onclick = () => toggleDate(day);
+
+                calendarGrid.appendChild(dayCell);
+            }
+        }
+
+        // Start App
+        init();
+
+    </script>
+</body>
+</html>
