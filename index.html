@@ -97,6 +97,7 @@
                 background-color: white;
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
+                zoom: 0.9; /* Slight zoom out to ensure fit */
             }
             
             .no-print {
@@ -104,7 +105,6 @@
             }
 
             /* Main Container Fixes for Print */
-            /* Force the main grid to act as a block so the invoice takes full width */
             .grid-cols-1.md\:grid-cols-3 {
                 display: block !important;
             }
@@ -117,10 +117,28 @@
             .invoice-container {
                 box-shadow: none !important;
                 border: none !important;
-                padding: 0 !important;
+                padding: 1.5rem !important; /* Reduced padding from 2.5rem/p-10 */
                 margin: 0 !important;
                 max-width: 100% !important;
                 width: 100% !important;
+                min-height: auto !important;
+            }
+
+            /* Reduce vertical spacing specifically for print */
+            .mb-8 {
+                margin-bottom: 1.25rem !important; /* Reduce from 2rem to 1.25rem */
+            }
+
+            /* Prevent Calendar Expansion */
+            .calendar-section .bg-white {
+                /* Constrain the calendar container width so days don't get huge */
+                max-width: 400px; 
+                margin-top: 0 !important;
+            }
+            
+            .calendar-day {
+                /* Ensure font size inside calendar remains readable but small */
+                font-size: 0.75rem !important;
             }
 
             /* Clean up Inputs */
@@ -131,7 +149,6 @@
                 padding: 0 !important;
                 margin: 0 !important;
                 resize: none;
-                /* Ensure placeholders don't print */
             }
             input::placeholder, textarea::placeholder {
                 color: transparent;
@@ -139,7 +156,12 @@
 
             /* Ensure text legibility */
             .text-gray-400, .text-gray-500 {
-                color: #4b5563 !important; /* Slightly darker gray for better print contrast */
+                color: #4b5563 !important; 
+            }
+            
+            /* Hide the scrollbar if any on dynamic items */
+            #sidebarItemsContainer {
+                display: none;
             }
         }
     </style>
