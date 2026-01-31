@@ -124,45 +124,64 @@
                 min-height: auto !important;
             }
 
-            /* Reduce vertical spacing specifically for print */
-            .mb-8 {
-                margin-bottom: 1.25rem !important; /* Reduce from 2rem to 1.25rem */
+            /* --- NEW PRINT LAYOUT: SIDE-BY-SIDE --- */
+            .calendar-totals-layout {
+                display: grid !important;
+                grid-template-columns: 1.6fr 1fr !important; /* Calendar takes 60% approx */
+                gap: 2rem !important;
+                align-items: start !important;
+                margin-top: 1rem !important;
             }
 
-            /* Prevent Calendar Expansion */
+            /* Adjust Calendar Column in Print */
+            .calendar-section {
+                margin-bottom: 0 !important;
+                width: 100% !important;
+            }
             .calendar-section .bg-white {
-                /* Constrain the calendar container width so days don't get huge */
-                max-width: 400px; 
-                margin-top: 0 !important;
+                max-width: none !important; 
+                border: 1px solid #ddd !important;
             }
             
-            .calendar-day {
-                /* Ensure font size inside calendar remains readable but small */
-                font-size: 0.75rem !important;
+            /* Adjust Totals Column in Print */
+            .totals-section {
+                margin-top: 1.8rem !important; /* Align nicely with calendar grid top */
             }
-
-            /* Clean up Inputs */
-            input, textarea, select {
-                border: none !important;
+            
+            /* Clean up footer box styles for side-bar look */
+            .footer-box {
                 background: transparent !important;
-                box-shadow: none !important;
                 padding: 0 !important;
-                margin: 0 !important;
-                resize: none;
+                border: none !important;
             }
-            input::placeholder, textarea::placeholder {
-                color: transparent;
-            }
-
+            
             /* Ensure text legibility */
             .text-gray-400, .text-gray-500 {
                 color: #4b5563 !important; 
             }
             
-            /* Hide the scrollbar if any on dynamic items */
-            #sidebarItemsContainer {
-                display: none;
+            /* Adjust Thank you message position */
+            .footer-message {
+                margin-top: 2rem !important;
+                padding-top: 1rem !important;
+                text-align: right !important;
             }
+
+            /* Hide inputs placeholder */
+            input::placeholder, textarea::placeholder {
+                color: transparent;
+            }
+            
+            /* Inputs clean up */
+            input, textarea, select {
+                border: none !important;
+                background: transparent !important;
+                resize: none;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+
+            #sidebarItemsContainer { display: none; }
         }
     </style>
 </head>
@@ -273,7 +292,7 @@
         <div class="col-span-1 md:col-span-2">
             <div class="invoice-container bg-white p-8 md:p-10 rounded-xl shadow-lg border border-gray-200 min-h-[800px] flex flex-col justify-between relative">
                 
-                <!-- Invoice Header -->
+                <!-- Invoice Header Details -->
                 <div>
                     <div class="flex justify-between items-start mb-8">
                         <div>
@@ -308,6 +327,10 @@
                     </div>
 
                     <hr class="border-gray-100 mb-8">
+                </div>
+
+                <!-- Split Layout Container (Normal: Stacked, Print: Grid) -->
+                <div class="calendar-totals-layout">
 
                     <!-- Calendar Visual -->
                     <div class="mb-8 calendar-section">
@@ -333,38 +356,38 @@
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Footer / Totals -->
-                <div>
-                    <div class="footer-box bg-gray-50 rounded-lg p-6">
-                        <div class="flex justify-between items-center mb-2">
-                            <span class="text-gray-600 text-sm">Total Days Worked</span>
-                            <span id="totalDaysDisplay" class="font-semibold text-gray-800">0 days</span>
-                        </div>
-                        <div class="flex justify-between items-center mb-2">
-                            <span class="text-gray-600 text-sm">Daily Rate</span>
-                            <span id="rateDisplay" class="font-semibold text-gray-800">₱ 435.00</span>
-                        </div>
-                        
-                        <!-- NEW: Subtotal Area -->
-                        <div class="my-2 border-t border-gray-200 border-dashed"></div>
+                    <!-- Footer / Totals -->
+                    <div class="totals-section">
+                        <div class="footer-box bg-gray-50 rounded-lg p-6">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-gray-600 text-sm">Total Days Worked</span>
+                                <span id="totalDaysDisplay" class="font-semibold text-gray-800">0 days</span>
+                            </div>
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-gray-600 text-sm">Daily Rate</span>
+                                <span id="rateDisplay" class="font-semibold text-gray-800">₱ 435.00</span>
+                            </div>
+                            
+                            <!-- NEW: Subtotal Area -->
+                            <div class="my-2 border-t border-gray-200 border-dashed"></div>
 
-                        <!-- Dynamic Invoice Items -->
-                        <div id="invoiceItemsContainer">
-                            <!-- Injected by JS -->
+                            <!-- Dynamic Invoice Items -->
+                            <div id="invoiceItemsContainer">
+                                <!-- Injected by JS -->
+                            </div>
+
+                            <div class="border-t border-gray-200 pt-4 flex justify-between items-center">
+                                <span class="text-lg font-bold text-gray-800">Total Due</span>
+                                <span id="totalAmountDisplay" class="text-2xl font-bold theme-text">₱ 0.00</span>
+                            </div>
                         </div>
 
-                        <div class="border-t border-gray-200 pt-4 flex justify-between items-center">
-                            <span class="text-lg font-bold text-gray-800">Total Due</span>
-                            <span id="totalAmountDisplay" class="text-2xl font-bold theme-text">₱ 0.00</span>
+                        <div class="footer-message mt-8 pt-8 border-t border-gray-100 text-center">
+                            <p class="text-gray-400 text-xs italic">Thank you for your business!</p>
                         </div>
                     </div>
-
-                    <div class="footer-message mt-8 pt-8 border-t border-gray-100 text-center">
-                        <p class="text-gray-400 text-xs italic">Thank you for your business!</p>
-                    </div>
-                </div>
+                </div> <!-- End Split Layout -->
 
             </div>
         </div>
